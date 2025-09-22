@@ -1,6 +1,6 @@
 import Mathlib.Tactic
 
-/- ** Welcome to MAT740 Topology in Lean! **
+/- **Welcome to MAT740 Topology in Lean!**
 
 This file summarizes the basic features you will need to start
 proving theorems in Lean 4. For more detail see
