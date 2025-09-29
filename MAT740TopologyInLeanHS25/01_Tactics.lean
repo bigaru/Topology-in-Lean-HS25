@@ -165,6 +165,9 @@ example (hp : p) : p ∨ q := by
   left -- use `left` or `right` if `∨` appears in goal
   exact hp
 
+example (hp : p) : p ∨ q := by
+  exact Or.inl hp -- `Or.inl` and `Or.inr` construct disjunctions
+
 example (hpq : p ∨ q) : q ∨ p := by
   obtain hp | hq := hpq -- use `obtain` to split `∨` in hypothesis into cases
   case inl =>
