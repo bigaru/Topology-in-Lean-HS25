@@ -1,8 +1,8 @@
 # MAT740-Topology-in-Lean-HS25
 
-** Welcome to Topology in Lean! **
+**Welcome to Topology in Lean!**
 
-In this course, we will formalize the main definitions and theorems of point-set topology in [Lean 4](https://lean-lang.org). We will allow ourselves to use everything in [Mathlib](https://github.com/leanprover-community/mathlib4) apart from Mathlib.Topology.
+In this course, we will formalize the main definitions and theorems of point-set topology in [Lean 4](https://lean-lang.org). We will allow ourselves to use everything in [Mathlib](https://github.com/leanprover-community/mathlib4) apart from `Mathlib.Topology`.
 
 This material was adapted from https://github.com/miguelmarco/topologia_general_lean.
 
