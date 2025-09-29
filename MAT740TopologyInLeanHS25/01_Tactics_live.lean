@@ -118,6 +118,22 @@ example (hpq : p ↔ q) (hq : q) : p := by
   apply hpq.mpr
   exact hq
 
+-- `∨`
+example (hp : p) : p ∨ q := by
+  left
+  exact hp
+
+example (hp : p) : p ∨ q := by
+  exact Or.inl hp -- `Or.inl` and `Or.inr` can construct disjunctions
+
+example (hpq : p ∨ q) : q ∨ p := by
+  obtain hp | hq := hpq
+  case inl =>
+    right
+    exact hp
+  case inr =>
+    left
+    exact hq
 
 -- `∃`
 example : ∃ n : ℕ, n = n := by
@@ -128,3 +144,87 @@ example (h : ∃ n : ℕ, n > 0) : True := by
   trivial
 
 end Logic
+
+-- # Reasoning techniques
+
+section Reasoning
+
+variable (p : Prop)
+
+-- Proof by contradiction
+example : (¬ ¬ p) → p := by
+  intro h
+  by_contra g
+  contradiction
+
+-- Push negations through quantifiers
+example : ¬ (∀ n : ℕ, n = 0) := by
+  push_neg
+  use 1
+  exact one_ne_zero
+
+example (h : ¬ (∃ n : ℕ, n = 0)) : False := by
+  push_neg at h
+  have z : 0 = 0 := by rfl
+  apply h at z
+  contradiction
+
+-- Proof by cases
+example : p ∨ ¬p := by
+  by_cases h : p
+  case pos =>
+    left ; exact h
+  case neg =>
+    right ; exact h
+
+-- Induction
+example : ∀ n : ℕ, 0 ≤ n := by
+  intro n
+  induction n with
+  | zero =>
+    rfl
+  | succ n ih =>
+    exact Nat.le_add_right_of_le ih
+
+end Reasoning
+
+
+/- # Searching
+
+Get suggestions with
+`exact?`
+`apply?`
+`rw?`
+`have?`
+`hint`
+
+Ask AI.
+
+Search Mathlib docs:
+
+Search Loogle
+-/
+
+-- # Automation
+
+-- `repeat` will repeat any block of code until it no longer applies
+
+-- `simp` and its variations will try to simplify the goal
+-- `simp at h` will simplify the hypothesis
+-- @[simp]
+
+-- `tauto` for logical tautologies
+example (p q : Prop) : p → (q → (p ∧ p)) := by
+  tauto
+
+-- `linarith` for linear inequalities
+example (n : ℕ) : 0 ≤ n + 1 := by
+  linarith
+
+-- `ring` for commutative rings
+example (l m n : ℕ) : (n + m) * l = l * m + l * n := by
+  ring
+
+-- `noncomm_ring`
+-- `abel`
+-- `group`
