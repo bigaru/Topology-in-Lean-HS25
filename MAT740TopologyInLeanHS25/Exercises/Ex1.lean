@@ -24,8 +24,8 @@ example : ¬(p ∧ ¬p) := by sorry
 example : p ∧ ¬q → ¬(p → q) := by sorry
 example : ¬p → (p → q) := by sorry
 example : (¬p ∨ q) → (p → q) := by sorry
-example : p ∨ false ↔ p := by sorry
-example : p ∧ false ↔ false := by sorry
+example : p ∨ False ↔ p := by sorry
+example : p ∧ False ↔ False := by sorry
 
 -- Classical reasoning required (`by_contra`, `by_cases`, `push_neg`)
 example : (p → r ∨ s) → ((p → r) ∨ (p → s)) := by sorry
