@@ -296,6 +296,8 @@ If `y : ↥S`, its components can be accessed as
 There is a canonical inclusion map from `↥S` to `X`.
 For `x : ↥S`, the corresponding element of `X` is written as `↑x` (\u-).
 
+Given `S : Set X` and `f : X → Y`, one can restrict `f` to `↥S` using `restrict S f`.
+
 Just as sets can be defined by `{x : X | P x}`,
 subtypes can be constructed using `{x : X // P x}`
 -/
