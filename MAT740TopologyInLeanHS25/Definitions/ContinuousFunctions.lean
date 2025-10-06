@@ -4,7 +4,7 @@ open Set
 
 universe u v w
 
-variable {X : Type u} {Y : Type v} {Z : Type w} [Topology X] [Topology Y] [Topology Z] {s t : Set X}
+variable {X : Type u} {Y : Type v} {Z : Type w} [Topology X] [Topology Y] [Topology Z]
 
 /- # Continuous functions -/
 
@@ -55,3 +55,5 @@ theorem Comp_comp (f : X → Y) (g : Y → Z) (cf : Cont f) (cg : Cont g) : Cont
   specialize cg U open_U
   specialize cf (g ⁻¹' U) cg
   exact cf
+
+/- Continuity is local. -/

@@ -23,7 +23,12 @@ variable {X : Type u} {Y : Type v} [Topology X] [Topology Y] {s t : Set X}
 def Open (s : Set X) : Prop := Topology.Open s
 
 /- A set is closed if its complement is open. -/
+@[simp]
 def Closed (s : Set X) : Prop := Open sᶜ
+
+@[simp]
+/- A neighborhood of `x : X` is an open set containing `x`. -/
+def Nbhd (s : Set X) (x : X) := Open s ∧ x ∈ s
 
 /- We state the defining properties as theorems so we can apply them easily in proofs. -/
 @[simp]
@@ -49,14 +54,14 @@ theorem Open_empty : Open (∅ : Set X) := by
 
 /- For every type `X`, there is a topology on `X` where every set is open. -/
 instance discreteTopology (X : Type u) : Topology X where
-  Open := fun x => True
+  Open := fun s => True
   Open_univ := by trivial
   Open_inter := by intros ; trivial
   Open_sUnion := by intros ; trivial
 
 /- For every type `X`, there is a topology on `X` where only `∅` and `univ` are open. -/
 instance indiscreteTopology (X : Type u) : Topology X where
-  Open := fun x => x = ∅ ∨ x = univ
+  Open := fun s => s = ∅ ∨ s = univ
   Open_univ := by right ; rfl
   Open_inter := by
     intro a b ha hb
@@ -86,3 +91,12 @@ instance indiscreteTopology (X : Type u) : Topology X where
       obtain hs1 | hs2 := hs
       case inl => exact hs1
       case inr => rw [hs2] at ht; contradiction
+
+instance restrictionTopology [Topology X] (U : Set X) (open_U : Open U) : Topology ↥U where
+  Open := fun s => Open (U ∩ s)
+  Open_univ := by
+    rw [Subtype.coe_image_univ, inter_eq_self_of_subset_left fun {a} a => a]
+    exact open_U
+  Open_inter := by
+    sorry
+  Open_sUnion := by sorry
