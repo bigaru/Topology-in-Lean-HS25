@@ -120,10 +120,12 @@ example (h : Y ⊆ Z) : X \ Z ⊆ X \ Y := by
 Unions over a set (iUnion):
 Given a function `A : I → Set α`, there is a type
 `⋃ i : I, A i`  / `⋃ i, A i` (\bigcup) that represents the union over all sets `A i`
+WARNING: NOT (\cup)
 
 Intersections over a set (iInter):
 Given a function `A : I → Set α`, there is a type
-`⋂ i : I, A i`  / `⋂o i, A i` (\bigcap) that represents the intersection over all sets `A i`
+`⋂ i : I, A i`  / `⋂ i, A i` (\bigcap) that represents the intersection over all sets `A i`
+WARNING: NOT (\cup)
 -/
 
 /-
@@ -138,4 +140,46 @@ Given a set of sets `s : Set (Set α)`, there is a type
 WARNING: NOT (\cup)
 -/
 
--- # Next Time: Functions
+example (A : Set α) : ⋂₀ {A} = A := by
+  ext x; constructor
+  case mp =>
+    intro hx
+    rw [mem_sInter] at hx
+    specialize hx A
+    apply hx
+    trivial
+  case mpr =>
+    intro hx
+    rw [mem_sInter]
+    intro t ht
+    rw [mem_singleton_iff] at ht
+    rw [ht]
+    exact hx
+
+/- # Functions
+We can use the function type `f : α → β` to functions.
+
+If `Y : Set β`, there is a set `preimage f Y := {x : α  | f x ∈ Y}`.
+One can write `f ⁻¹' Y` (\-1)
+
+If `X : Set α`, there is a set `image f X := {y : β | ∃ x : α, x ∈ X ∧ f x = y}`.
+One can write `f '' X` for the image
+Treat like `∃` in proofs.
+-/
+
+variable (β : Type) (f : α → β)
+
+example : f '' (X ∪ Y) = (f '' X) ∪ (f '' Y) := by
+  ext u; constructor
+  case mp =>
+    intro hx
+    rw [mem_image] at hx
+    obtain ⟨x, ⟨hx1, hx2⟩⟩ := hx
+    obtain hxx | hxy := hx1
+    case inl =>
+      left
+      use x
+    case inr =>
+      right
+      use x
+  case mpr => sorry

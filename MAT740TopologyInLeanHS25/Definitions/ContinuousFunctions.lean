@@ -49,7 +49,7 @@ theorem Cont_id : Cont (id : X → X) := by
 
 /- Compositions of continuous functions are continuous. -/
 @[simp]
-theorem Comp_comp (f : X → Y) (g : Y → Z) (cf : Cont f) (cg : Cont g) : Cont (g ∘ f) := by
+theorem Cont_comp (f : X → Y) (g : Y → Z) (cf : Cont f) (cg : Cont g) : Cont (g ∘ f) := by
   intro U
   intro open_U
   specialize cg U open_U

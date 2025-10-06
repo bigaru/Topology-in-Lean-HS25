@@ -243,7 +243,7 @@ example (A B : Set α) :  ⋂₀ {A,B} = A ∩ B := by
 We can use the usual function type `f : α → β` to express functions.
 
 If `Y : Set β`, then `preimage f Y := {x : α | f x ∈ Y}`.
-One can write `f⁻¹' Y` (\-1) for the pre-image.
+One can write `f ⁻¹' Y` (\-1) for the pre-image.
 
 If `X : Set α`, then `image f X := {y : β | ∃ x : α, x ∈ X ∧ f x = y}`.
 One can write `f '' X` for the image (with a space before '').
