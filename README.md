@@ -9,10 +9,10 @@ This material was adapted from https://github.com/miguelmarco/topologia_general_
 Course Contents:
 
 1. Introduction to Lean
-   - Coding in Lean ([01_Basics.lean](./MAT740TopologyInLeanHS25/01_Basics.lean))
-   - Overview of tactics ([01_Tactics.lean](./MAT740TopologyInLeanHS25/01_Tactics.lean), [Tactics.pdf](./MAT740TopologyInLeanHS25/Tactics.pdf))
+   - Coding in Lean ([Basics.lean](./MAT740TopologyInLeanHS25/Background/Basics.lean.lean))
+   - Overview of tactics ([Tactics.lean](./MAT740TopologyInLeanHS25/Background/Tactics.lean.lean), [Tactics.pdf](./MAT740TopologyInLeanHS25/Background/Tactics.pdf.pdf))
 2. Sets and functions
-3. Metric spaces
+3. Topological spaces [TopologicalSpaces.lean](./MAT740TopologyInLeanHS25/Definitions/TopologicalSpaces.lean) and continuous functions [ContinuousFunctions.lean](./MAT740TopologyInLeanHS25/Definitions/ContinuousFunctions.lean)
 4. ...
 
 Exercises are available in the [Exercises](./MAT740TopologyInLeanHS25/Exercises/) folder.
