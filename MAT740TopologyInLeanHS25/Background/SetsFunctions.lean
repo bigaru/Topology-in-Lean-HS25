@@ -191,7 +191,7 @@ Use simp or Mathlib definitions to rewrite these.
 -/
 
 example (I : Type) (A : I → Set α) (x : α) (i : I) (h : x ∈ A i) : x ∈ ⋃ i, A i := by
-  rw [Set.mem_iUnion] -- you can use `simp` instead
+  rw [mem_iUnion] -- you can use `simp` instead
   use i
 
 /-
@@ -209,14 +209,35 @@ Use simp or Mathlib definitions to rewrite these.
 -/
 
 example (A B : Set α) :  ⋂₀ {A,B} = A ∩ B := by
+  -- we do not use `simp` since the statement is already a tagged theorem.
   ext x
   constructor
   case mp =>
     intro hx
-    simp at hx
-    exact hx
+    rw [mem_sInter] at hx
+    have ha : x ∈ A := by
+      specialize hx A
+      apply hx
+      simp
+    have hb : x ∈ B := by
+      specialize hx B
+      apply hx
+      simp
+    constructor
+    case left => exact ha
+    case right => exact hb
   case mpr =>
-    sorry
+    intro hx
+    rw [mem_sInter]
+    intro t ht
+    obtain ht1 | ht2 := ht
+    case inl =>
+      rw [← ht1] at hx
+      exact hx.1
+    case inr =>
+      rw [mem_singleton_iff] at ht2
+      rw [← ht2] at hx
+      exact hx.2
 
 /- # Functions
 We can use the usual function type `f : α → β` to express functions.
@@ -258,7 +279,6 @@ example : f '' (X ∪ Y) = (f '' X) ∪ (f '' Y) := by
         right
         exact xu
       use x
-
 
 /- # Subtypes
 You may have noticed that we define functions between types, not sets.
