@@ -10,6 +10,9 @@ class Basis (X : Type u) : Type u where
   Basis_cover : ⋃₀Basics = univ
   Basis_inter : ∀ b1 ∈ Basics, ∀ b2 ∈ Basics, ∀ x ∈ b1 ∩ b2, ∃ b3 ∈ Basics, x ∈ b3 ∧ b3 ⊆ b1 ∩ b2
 
+-- `∀ x ∈ A, phi x` is equivalent to `∀ x : X, x ∈ A → phi x`
+-- `∃ x ∈ A, phi x` is equivalent to `∃ x : X, x ∈ A ∧ phi x`
+
 variable {X : Type u} [B : Basis X]
 
 @[simp]
@@ -38,9 +41,7 @@ instance basisTopology : Topology X where
       · exact ⟨hbUx2, hbVx2⟩
     obtain ⟨bUVx, hbUVx1, hbUVx2, hbUVx3⟩ := w
     have z : bUVx ⊆ U ∩ V := by
-      intro y hy
-      apply hbUVx3 at hy
-      exact ⟨hbUx3 hy.left, hbVx3 hy.right⟩
+      sorry
     use bUVx
   Open_sUnion := by
     intro S hS x hx
@@ -57,38 +58,7 @@ instance basisTopology : Topology X where
 
 def IsBasis [Topology X] : Prop :=
   (∀ b ∈ B.Basics, Open b) ∧
-  (∀ U, Open U → ∃ C ⊆ B.Basics, U = ⋃₀ C)
+  (∀ U, Open U → ∃ C ⊆ B.Basics, U = ⋃₀C)
 
 theorem IsBasis_basisTopology : @IsBasis X B basisTopology := by
-  constructor
-  case left =>
-    intro Bx hBx x hx
-    use Bx
-  case right =>
-    intro U open_U
-    have w : ∀ x ∈ U, ∃ Bx ∈ B.Basics, x ∈ Bx ∧ Bx ⊆ U := open_U
-    set C := {Bx ∈ B.Basics | Bx ⊆ U}
-    use C
-    constructor
-    case left =>
-      intro y hy
-      exact hy.1
-    case right =>
-      ext y; constructor
-      case mp =>
-        intro hy
-        rw [mem_sUnion]
-        specialize w y hy
-        obtain ⟨Bx,hBx1, hBx2, hBx3⟩ := w
-        have z : Bx ∈ C := by
-          rw [mem_setOf]
-          constructor
-          case left => exact hBx1
-          case right => exact hBx3
-        use Bx
-      case mpr =>
-        intro hy
-        rw [mem_sUnion] at hy
-        obtain ⟨By, hBy1, hBy2⟩ := hy
-        apply hBy1.right
-        exact hBy2
+  sorry

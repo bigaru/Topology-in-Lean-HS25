@@ -72,6 +72,9 @@ theorem Cont_local (f : X → Y) : Cont (restrict univ f) ↔ ∀ x : X, ∃ U :
 
 /- ## Special types of continuous functions -/
 
-def HomeoMap (f : X → Y) : Prop := Function.Bijective f ∧ Cont f
+@[simp]
+def InverseFun (f : X → Y) (g : Y → X) := f ∘ g = id ∧ g ∘ f = id
+
+def HomeoMap (f : X → Y) : Prop := Cont f ∧ (∃ g : Y → X, Cont g ∧ InverseFun f g)
 def OpenMap (f : X → Y) : Prop := ∀ U : Set X, Open U → Open (f '' U)
 def ClosedMap (f : X → Y) : Prop := ∀ U : Set X, Closed U → Closed (f '' U)
