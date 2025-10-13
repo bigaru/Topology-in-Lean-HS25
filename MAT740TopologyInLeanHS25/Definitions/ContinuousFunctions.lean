@@ -57,3 +57,21 @@ theorem Cont_comp (f : X → Y) (g : Y → Z) (cf : Cont f) (cg : Cont g) : Cont
   exact cf
 
 /- Continuity is local. -/
+theorem Cont_local (f : X → Y) : Cont (restrict univ f) ↔ ∀ x : X, ∃ U : Set X, ∃ w : Open U, Nbhd U x ∧ Cont (restrict U f) := by
+  constructor
+  case mp =>
+    intro cont_f x
+    use univ
+    use Open_univ
+    constructor
+    case left => simp only [Nbhd, Open_univ, mem_univ, and_self]
+    case right => exact cont_f
+  case mpr =>
+    intro h V open_V
+    sorry
+
+/- ## Special types of continuous functions -/
+
+def HomeoMap (f : X → Y) : Prop := Function.Bijective f ∧ Cont f
+def OpenMap (f : X → Y) : Prop := ∀ U : Set X, Open U → Open (f '' U)
+def ClosedMap (f : X → Y) : Prop := ∀ U : Set X, Closed U → Closed (f '' U)

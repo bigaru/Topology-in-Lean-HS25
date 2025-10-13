@@ -208,10 +208,56 @@ example : p ∧ False ↔ False := by
     intro f; contradiction
 
 -- Classical reasoning required (`by_contra`, `by_cases`, `push_neg`)
-example : (p → r ∨ s) → ((p → r) ∨ (p → s)) := by sorry
-example : ¬(p ∧ q) → ¬p ∨ ¬q := by sorry
-example : ¬(p → q) → p ∧ ¬q := by sorry
-example : (p → q) → (¬p ∨ q) := by sorry
-example : (¬q → ¬p) → (p → q) := by sorry
-example : p ∨ ¬p := by sorry
-example : (((p → q) → p) → p) := by sorry
+example : (p → r ∨ s) → ((p → r) ∨ (p → s)) := by
+  intro h
+  by_cases c : p
+  case pos =>
+    specialize h c
+    obtain hr | hs := h
+    case inl =>
+      left ; intro c' ; exact hr
+    case inr =>
+      right ; intro c' ; exact hs
+  case neg =>
+    left ; intro h ; contradiction
+
+example : ¬(p ∧ q) → ¬p ∨ ¬q := by
+  intro h
+  by_cases c : p
+  case pos =>
+    push_neg at h
+    specialize h c
+    right
+    exact h
+  case neg =>
+    left ; exact c
+
+
+example : ¬(p → q) → p ∧ ¬q := by
+  intro h
+  push_neg at h
+  exact h
+
+example : (p → q) → (¬p ∨ q) := by
+  intro h
+  by_cases c : p
+  case pos => right ; exact h c
+  case neg => left ; exact c
+
+example : (¬q → ¬p) → (p → q) := by
+  intro h
+  contrapose
+  exact h
+
+example : p ∨ ¬p := by
+  by_cases c : p
+  case pos => left ; exact c
+  case neg => right ; exact c
+
+example : (((p → q) → p) → p) := by
+  intro h
+  by_cases c : p → q
+  case pos => exact h c
+  case neg =>
+    push_neg at c
+    exact c.left

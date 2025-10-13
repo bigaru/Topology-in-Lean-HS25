@@ -92,11 +92,27 @@ instance indiscreteTopology (X : Type u) : Topology X where
       case inl => exact hs1
       case inr => rw [hs2] at ht; contradiction
 
+/- Topology restricted to an open subset of space X. -/
 instance restrictionTopology [Topology X] (U : Set X) (open_U : Open U) : Topology ↥U where
   Open := fun s => Open (U ∩ s)
   Open_univ := by
     rw [Subtype.coe_image_univ, inter_eq_self_of_subset_left fun {a} a => a]
     exact open_U
   Open_inter := by
-    sorry
-  Open_sUnion := by sorry
+    intro V W open_V open_W
+    rw [image_val_inter_self_right_eq_coe] at open_W
+    rw [image_val_inter_self_right_eq_coe] at open_V
+    rw [image_val_inter_self_right_eq_coe, image_val_inter]
+    apply @Open_inter X
+    case hs => exact open_V
+    case ht => exact open_W
+  Open_sUnion := by
+    intro C hC
+    simp only [image_val_inter_self_right_eq_coe] at hC
+    rw [image_val_inter_self_right_eq_coe, image_sUnion]
+    apply @Open_sUnion X
+    intro V hV
+    obtain ⟨V',⟨hV'1, hV'2⟩⟩ := hV
+    specialize hC V' hV'1
+    rw [hV'2] at hC
+    exact hC
