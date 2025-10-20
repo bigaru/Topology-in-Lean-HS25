@@ -121,12 +121,12 @@ def ClosedMap (f : X → Y) : Prop := ∀ U : Set X, Closed U → Closed (f '' U
 
 theorem HomeoMap_OpenMap : HomeoMap f → OpenMap f := by
   intro homeo_f U open_U
-  obtain ⟨cont_f, ⟨g2, cont_g2, inv_fg2⟩ ⟩ := homeo_f
+  obtain ⟨cont_f, ⟨g2, cont_g2, inv_fg2⟩⟩ := homeo_f
   rw [image_eq_preimage_InverseFun f g2 inv_fg2 U]
   apply cont_g2
   exact open_U
 
-theorem inv_Cont_OpenMap_Homeomap
+theorem inv_Cont_OpenMap_HomeoMap
   (inv_fg : InverseFun f g) (cont_f : Cont f) :
   OpenMap f → HomeoMap f := by
     intro open_f
