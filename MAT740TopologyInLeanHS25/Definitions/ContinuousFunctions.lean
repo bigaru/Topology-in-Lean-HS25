@@ -4,9 +4,11 @@ open Set
 
 universe u v w
 
-variable {X : Type u} {Y : Type v} {Z : Type w} [Topology X] [Topology Y] [Topology Z]
+variable {X : Type u} {Y : Type v} {Z : Type w}
 
 /- # Continuous functions -/
+section
+variable [Topology X] [Topology Y] [Topology Z]
 
 /- A function `f : X → Y` is continuous, iff preimages of open sets are open. -/
 @[simp]
@@ -57,23 +59,56 @@ theorem Cont_comp (f : X → Y) (g : Y → Z) (cf : Cont f) (cg : Cont g) : Cont
   exact cf
 
 /- Continuity is local. -/
-theorem Cont_local (f : X → Y) : Cont (restrict univ f) ↔ ∀ x : X, ∃ U : Set X, ∃ w : Open U, Nbhd U x ∧ Cont (restrict U f) := by
-  constructor
-  case mp =>
-    intro cont_f x
-    use univ
-    use Open_univ
+theorem Cont_local (f : X → Y) :
+  Cont (restrict univ f) ↔ ∀ x : X, ∃ U : Set X, ∃ w : Open U, Nbhd U x ∧ Cont (restrict U f) := by
     constructor
-    case left => simp only [Nbhd, Open_univ, mem_univ, and_self]
-    case right => exact cont_f
-  case mpr =>
-    intro h V open_V
-    sorry
+    case mp =>
+      intro cont_f x
+      use univ
+      use Open_univ
+      constructor
+      case left => simp only [Nbhd, Open_univ, mem_univ, and_self]
+      case right => exact cont_f
+    case mpr =>
+      intro h V open_V
+      choose U hU using h
+      -- have w : univ.restrict f⁻¹' V = ⋃ x ∈ X, U x :=  sorry
+      sorry
+
+end
 
 /- ## Special types of continuous functions -/
+section
+variable (f : X → Y) (g : Y → X)
 
 @[simp]
 def InverseFun (f : X → Y) (g : Y → X) : Prop := (f ∘ g = id ∧ g ∘ f = id)
+
+lemma l1 (inv_fg : InverseFun f g) (x : X) : g (f x) = x := by
+  obtain ⟨h1,h2⟩ := inv_fg
+  rw [funext_iff] at h2
+  apply h2
+
+lemma l2 (inv_fg : InverseFun f g) (y : Y) : f (g y) = y := by
+  obtain ⟨h1,h2⟩ := inv_fg
+  rw [funext_iff] at h1
+  apply h1
+
+lemma image_eq_preimage_InverseFun (inv_fg : InverseFun f g) (U : Set X) : f '' U = g ⁻¹' U := by
+  ext y; constructor
+  case mp =>
+    intro hy
+    obtain ⟨x, hx1, hx2⟩ := hy
+    rw [Set.mem_preimage, ← hx2, l1 f g inv_fg x]
+    exact hx1
+  case mpr =>
+    intro hy
+    use g y
+    constructor
+    case left => exact hy
+    case right => exact l2 f g inv_fg y
+
+variable [Topology X] [Topology Y]
 
 @[simp]
 def HomeoMap (f : X → Y) : Prop := Cont f ∧ (∃ g : Y → X, Cont g ∧ InverseFun f g)
@@ -83,3 +118,48 @@ def OpenMap (f : X → Y) : Prop := ∀ U : Set X, Open U → Open (f '' U)
 
 @[simp]
 def ClosedMap (f : X → Y) : Prop := ∀ U : Set X, Closed U → Closed (f '' U)
+
+theorem HomeoMap_OpenMap : HomeoMap f → OpenMap f := by
+  intro homeo_f U open_U
+  obtain ⟨cont_f, ⟨g2, cont_g2, inv_fg2⟩ ⟩ := homeo_f
+  rw [image_eq_preimage_InverseFun f g2 inv_fg2 U]
+  apply cont_g2
+  exact open_U
+
+theorem inv_Cont_OpenMap_Homeomap
+  (inv_fg : InverseFun f g) (cont_f : Cont f) :
+  OpenMap f → HomeoMap f := by
+    intro open_f
+    constructor
+    case left => exact cont_f
+    case right =>
+      use g
+      constructor
+      case left =>
+        intro U open_U
+        rw [← image_eq_preimage_InverseFun f g inv_fg U]
+        apply open_f
+        exact open_U
+      case right => exact inv_fg
+
+theorem bij_OpenMap_iff_ClosedMap (bij_f : Function.Bijective f) : OpenMap f ↔ ClosedMap f := by
+  constructor
+  case mp =>
+    intro open_f C closed_C
+    have open_Cc : Open Cᶜ := by
+      apply closed_C
+    apply open_f at open_Cc
+    rw [Closed]
+    rw [← Set.image_compl_eq bij_f]
+    exact open_Cc
+  case mpr =>
+    intro closed_f U open_U
+    have closed_Uc : Closed Uᶜ := by
+      simp only [Closed, compl_compl]
+      exact open_U
+    apply closed_f at closed_Uc
+    rw [Set.image_compl_eq bij_f] at closed_Uc
+    simp only [Closed, compl_compl] at closed_Uc
+    exact closed_Uc
+
+end

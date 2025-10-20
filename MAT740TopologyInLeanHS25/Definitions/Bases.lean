@@ -2,7 +2,7 @@ import Mathlib.Tactic
 import MAT740TopologyInLeanHS25.Definitions.TopologicalSpaces
 import MAT740TopologyInLeanHS25.Definitions.ContinuousFunctions
 
-universe u
+universe u v
 open Set
 
 class Basis (X : Type u) : Type u where
@@ -10,7 +10,10 @@ class Basis (X : Type u) : Type u where
   Basis_cover : ⋃₀Basics = univ
   Basis_inter : ∀ b1 ∈ Basics, ∀ b2 ∈ Basics, ∀ x ∈ b1 ∩ b2, ∃ b3 ∈ Basics, x ∈ b3 ∧ b3 ⊆ b1 ∩ b2
 
-variable {X : Type u} [B : Basis X]
+variable {X : Type u} {Y : Type v}
+
+section
+variable [B : Basis X]
 
 @[simp]
 theorem Basis_cover : ⋃₀B.Basics = univ := B.Basis_cover
@@ -55,15 +58,22 @@ instance basisTopology : Topology X where
       use Ux
     use bx
 
+@[simp]
+theorem Open_basisTopology {U : Set X} : Open U ↔ ∀ x ∈ U, ∃ bx ∈ B.Basics, x ∈ bx ∧ bx ⊆ U := by
+  trivial
+
+@[simp]
+theorem Open_Basics : ∀ b ∈ B.Basics, Open b := by
+  intro b basic_b x hx
+  use b
+
 def IsBasis [Topology X] : Prop :=
   (∀ b ∈ B.Basics, Open b) ∧
   (∀ U, Open U → ∃ C ⊆ B.Basics, U = ⋃₀ C)
 
 theorem IsBasis_basisTopology : @IsBasis X B basisTopology := by
   constructor
-  case left =>
-    intro Bx hBx x hx
-    use Bx
+  case left => apply Open_Basics
   case right =>
     intro U open_U
     have w : ∀ x ∈ U, ∃ Bx ∈ B.Basics, x ∈ Bx ∧ Bx ⊆ U := open_U
@@ -92,3 +102,15 @@ theorem IsBasis_basisTopology : @IsBasis X B basisTopology := by
         obtain ⟨By, hBy1, hBy2⟩ := hy
         apply hBy1.right
         exact hBy2
+
+end
+
+variable [Topology X] [BY : Basis Y]
+
+theorem Cont_Basics (f : X → Y) : Cont f ↔ ∀ b ∈ BY.Basics, Open (f ⁻¹' b) := by
+  /-
+    (=>) use `Open_Basics`
+    (<=) use `IsBasis_basisTopology` to decompose open U into union of basis element.
+    Then use properties of preimages `Set.preimage_sUnion` and `Set.sUnion_image`.
+  -/
+  sorry

@@ -42,6 +42,23 @@ theorem Open_sUnion {s : Set (Set X)} (h : ∀ t ∈ s, Open t) : Open (⋃₀ s
   Topology.Open_sUnion s h
 
 @[simp]
+theorem Open_iUnion {I : Type*} {A : I → Set X} (h : ∀ i, Open (A i)) : Open (⋃ i, A i) := by
+  rw [← sUnion_range]
+  apply Open_sUnion
+  intro U hU
+  rw [mem_range] at hU
+  obtain ⟨i, hi⟩ := hU
+  specialize h i
+  rw [hi] at h
+  exact h
+
+@[simp]
+theorem Open_biUnion {A : Set (Set X)} (h : ∀ a ∈ A, Open (a)) : Open (⋃ a ∈ A, a) := by
+  rw [← sUnion_eq_biUnion]
+  apply Open_sUnion
+  exact h
+
+@[simp]
 theorem Open_empty : Open (∅ : Set X) := by
   have w : ∀ t ∈ (∅ : Set (Set X)), Open t := by
     intro t ht
