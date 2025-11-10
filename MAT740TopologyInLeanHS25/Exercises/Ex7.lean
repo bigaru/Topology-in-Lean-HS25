@@ -6,7 +6,15 @@ section Ex1
 variable (I : Type) (J : I → Type) (P : (i : I) → J i → Prop)
 
 theorem dist_quant : (∀ i, ∃ j : J i, P i j) ↔ (∃ c : (i : I) → J i, ∀ i, P i (c i)) := by
-  sorry -- hint: use the `choose` tactic
+  -- hint: use the `choose` tactic
+  constructor
+  · intro h
+    choose c hc using h
+    exact ⟨c, hc⟩
+  · intro h
+    rcases h with ⟨c, hc⟩
+    intro i
+    exact ⟨c i, hc i⟩
 
 end Ex1
 
@@ -20,11 +28,25 @@ instance Coproduct_coproductTopology (X : Type u) [TX : Topology X] (Y : Type u)
   char_Coproduct := by
     intro T TT f
     constructor
-    case mp =>
-      sorry
-      -- hint: introduce explicit definition of continuity of f as hypothesis
-    case mpr =>
-      sorry
+    · intro h
+      constructor
+      · intro U open_U
+        -- unfold continuity for `f` to specialize it at `U`
+        simp only [Cont] at h
+        have hf := h U open_U
+        rcases hf with ⟨h_inl, h_inr⟩
+        exact h_inl
+
+      · intro U open_U
+        simp only [Cont] at h
+        have hf := h U open_U
+        rcases hf with ⟨h_inl, h_inr⟩
+        exact h_inr
+
+    · intro h
+      rcases h with ⟨hL, hR⟩
+      intro U open_U
+      exact ⟨hL U open_U, hR U open_U⟩
 end Ex2
 
 section Bonus
