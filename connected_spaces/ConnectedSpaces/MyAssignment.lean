@@ -1,64 +1,11 @@
 import Mathlib.Tactic
 import ConnectedSpaces.Definitions.Connectedness
 import ConnectedSpaces.Definitions.NewSpaces
+import ConnectedSpaces.RealSpace
 
 open Set
-
 open MyConnected
-open Constructions
-
-instance realTopology : Topology ℝ := @basisTopology ℝ metricBasis
-
-def Interval (A : Set ℝ) : Prop :=
-  ∀ {a b z : ℝ}, a ∈ A → b ∈ A → a ≤ z → z ≤ b → z ∈ A
-
-instance subsetTopology (A : Set ℝ) : Topology {x : ℝ // x ∈ A} :=
-  pullbackTopology ℝ realTopology {x : ℝ // x ∈ A} Subtype.val
-
-lemma open_Iio (z : ℝ) : Open {x : ℝ | x < z} := by
-  classical
-  refine (Open_basisTopology (B := metricBasis)).2 ?_
-  intro x hx
-  have hxz : x < z := hx
-  set ε := z - x with hεdef
-  have hε : 0 < ε := by
-    simpa [ε, hεdef, sub_eq_add_neg] using sub_pos.mpr hxz
-  refine ⟨Metric.ball x ε, ?_, ?_, ?_⟩
-  · exact Basic_balls
-  · simp [Metric.ball, hε, ε]
-  · intro y hy
-    have hy' : |y - x| < ε := by
-      simpa [Metric.ball, Real.dist_eq, ε, hεdef, abs_sub_comm] using hy
-    have hy_lt : y - x < ε := (abs_lt.mp hy').2
-    have : y < z := by
-      have := add_lt_add_right hy_lt x
-      simpa [ε, hεdef, add_comm, add_left_comm, add_assoc, add_sub_cancel, sub_eq_add_neg]
-      using this
-    exact this
-
-lemma open_Ioi (z : ℝ) : Open {x : ℝ | z < x} := by
-  classical
-  refine (Open_basisTopology (B := metricBasis)).2 ?_
-  intro x hx
-  have hzx : z < x := hx
-  set ε := x - z with hεdef
-  have hε : 0 < ε := by
-    simpa [ε, hεdef, sub_eq_add_neg] using sub_pos.mpr hzx
-  refine ⟨Metric.ball x ε, ?_, ?_, ?_⟩
-  · exact Basic_balls
-  · simp [Metric.ball, hε, ε]
-  · intro y hy
-    have hy' : |y - x| < ε := by
-      simpa [Metric.ball, Real.dist_eq, ε, hεdef, abs_sub_comm] using hy
-    have hy_gt : -ε < y - x := (abs_lt.mp hy').1
-    have : z < y := by
-      have := add_lt_add_right hy_gt x
-      have hxz : x - ε = z := by
-        simp [ε]
-      simpa [ε, hεdef, hxz, add_comm, add_left_comm, add_assoc, add_sub_cancel, sub_eq_add_neg]
-      using this
-    exact this
-
+open MyReal
 
 
 theorem connected_real_subset_implies_interval (A : Set ℝ) :
