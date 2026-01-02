@@ -66,4 +66,12 @@ lemma open_Ioi (z : ℝ) : Open {x : ℝ | z < x} := by
       linarith
     exact this
 
+
+universe u v
+variable {X : Type u} {Y : Type v} [Topology X] [Topology Y]
+
+@[simp]
+def ContinuousOn (f : X → Y) (s : Set X) : Prop :=
+  ∀ U : Set Y, Open U → ∃ V : Set X, Open V ∧ s ∩ f ⁻¹' U = s ∩ V
+
 end MyReal

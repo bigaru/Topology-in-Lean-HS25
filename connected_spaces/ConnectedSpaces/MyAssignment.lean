@@ -1,14 +1,15 @@
 import Mathlib.Tactic
+import ConnectedSpaces.Definitions.ContinuousFunctions
 import ConnectedSpaces.Definitions.Connectedness
 import ConnectedSpaces.Definitions.NewSpaces
 import ConnectedSpaces.RealSpace
 
-open Set
+
 open MyConnected
 open MyReal
 
 
-theorem connected_real_subset_implies_interval (A : Set ℝ) :
+theorem connected_real_subset_implies_interval {A : Set ℝ} :
 Connected {x : ℝ // x ∈ A} → Interval A := by
   intro hconn a b z ha hb haz hzb
   by_contra hznot
@@ -46,7 +47,7 @@ Connected {x : ℝ // x ∈ A} → Interval A := by
 
   -- U and V are disjoint
   have hUV_disjoint : Disjoint U V := by
-    refine disjoint_left.mpr ?_
+    refine Set.disjoint_left.mpr ?_
     intro x hxU hxV
     have hxU' : x.val < z := hxU
     have hxV' : z < x.val := hxV
@@ -76,7 +77,7 @@ Connected {x : ℝ // x ∈ A} → Interval A := by
   exact hSep hUnion
 
 
-theorem interval_implies_connected_real_subset (A : Set ℝ) :
+theorem interval_implies_connected_real_subset {A : Set ℝ} :
 Interval A → Connected {x : ℝ // x ∈ A} := by
   intro hInterval
 
@@ -257,8 +258,89 @@ Interval A → Connected {x : ℝ // x ∈ A} := by
     exact sep_contra V U openV openU hUV_disjoint.symm hUnion' y x hyV hxU hyx
 
 
-theorem connected_real_subset_iff_interval (A : Set ℝ) :
+theorem connected_real_subset_iff_interval {A : Set ℝ} :
 Connected {x : ℝ // x ∈ A} ↔ Interval A := by
   constructor
-  · exact connected_real_subset_implies_interval A
-  · exact interval_implies_connected_real_subset A
+  · exact connected_real_subset_implies_interval
+  · exact interval_implies_connected_real_subset
+
+
+
+theorem intermediate_value_theorem {f : ℝ → ℝ} {a b y : ℝ}
+    (hab : a ≤ b)
+    (hf : MyReal.ContinuousOn f (Set.Icc a b))
+    (hy : y ∈ Set.Icc (f a) (f b)) : ∃ c ∈ Set.Icc a b, f c = y := by
+
+  -- [a,b] is an interval set, hence its subtype is connected.
+  have hInterval_domain : Interval (Set.Icc a b) := by
+    intro a' b' z ha' hb' ha'z hzb'
+    refine ⟨?_, ?_⟩
+    · exact le_trans ha'.1 ha'z
+    · exact le_trans hzb' hb'.2
+
+  have hConn_domain : Connected {x : ℝ // x ∈ Set.Icc a b} :=
+    (connected_real_subset_iff_interval (A := Set.Icc a b)).2 hInterval_domain
+  -- Continuity-on gives continuity of the restriction fRes : [a,b] → ℝ.
+  let fRes : {x : ℝ // x ∈ Set.Icc a b} → ℝ := fun x => f x.val
+
+  have hCont_fRes : Cont fRes := by
+    intro U openU
+    rcases hf U openU with ⟨V, openV, hEq⟩
+    refine ⟨V, openV, ?_⟩
+    ext x
+    constructor
+    · intro hxU
+      have hxI : x.val ∈ Set.Icc a b := x.property
+      have hxL : x.val ∈ Set.Icc a b ∩ f ⁻¹' U := ⟨hxI, hxU⟩
+      have hxR : x.val ∈ Set.Icc a b ∩ V := by
+        rw [hEq] at hxL
+        exact hxL
+      exact hxR.2
+    · intro hxV
+      have hxI : x.val ∈ Set.Icc a b := x.property
+      have hxR : x.val ∈ Set.Icc a b ∩ V := ⟨hxI, hxV⟩
+      have hxL : x.val ∈ Set.Icc a b ∩ f ⁻¹' U := by
+        rw [hEq.symm] at hxR
+        exact hxR
+      exact hxL.2
+
+  -- The image f '' [a,b] is connected via a continuous surjection.
+  let g : {x : ℝ // x ∈ Set.Icc a b} → {t : ℝ // t ∈ f '' Set.Icc a b} :=
+    fun x => ⟨f x.val, ⟨x.val, x.property, rfl⟩⟩
+
+  have hSurj_g : Function.Surjective g := by
+    rintro ⟨t, ht⟩
+    rcases ht with ⟨x, hx, rfl⟩
+    refine ⟨⟨x, hx⟩, ?_⟩
+    ext
+    rfl
+
+  have hCont_g : Cont g := by
+    intro W openW
+    rcases openW with ⟨V, openV, rfl⟩
+    have hOpen_pre : Open (fRes ⁻¹' V) := hCont_fRes V openV
+    have hpre : g ⁻¹' (Subtype.val ⁻¹' V) = fRes ⁻¹' V := by ext x; rfl
+    rw [← hpre] at hOpen_pre
+    exact hOpen_pre
+
+  have hConn_img : Connected {t : ℝ // t ∈ f '' Set.Icc a b} :=
+    (Connected_image g hSurj_g hCont_g) hConn_domain
+
+  -- Connected subsets of ℝ are intervals.
+  -- So f '' [a,b] contains everything between f(a) and f(b).
+  have hInterval_img : Interval (f '' Set.Icc a b) :=
+    (connected_real_subset_iff_interval (A := f '' Set.Icc a b)).1 hConn_img
+
+  have ha_img : f a ∈ f '' Set.Icc a b := by
+    refine ⟨a, ?_, rfl⟩
+    exact ⟨le_rfl, hab⟩
+
+  have hb_img : f b ∈ f '' Set.Icc a b := by
+    refine ⟨b, ?_, rfl⟩
+    exact ⟨hab, le_rfl⟩
+
+  have hy_img : y ∈ f '' Set.Icc a b :=
+    hInterval_img ha_img hb_img hy.1 hy.2
+
+  rcases hy_img with ⟨c, hc, hfc⟩
+  exact ⟨c, hc, hfc⟩
