@@ -9,7 +9,7 @@ open Constructions
 
 instance realTopology : Topology ℝ := @basisTopology ℝ metricBasis
 
-def IsInterval (A : Set ℝ) : Prop :=
+def Interval (A : Set ℝ) : Prop :=
   ∀ {a b z : ℝ}, a ∈ A → b ∈ A → a ≤ z → z ≤ b → z ∈ A
 
 instance subsetTopology (A : Set ℝ) : Topology {x : ℝ // x ∈ A} :=
@@ -61,8 +61,8 @@ lemma open_Ioi (z : ℝ) : Open {x : ℝ | z < x} := by
 
 
 
-theorem connected_subset_real_is_interval (A : Set ℝ) :
-Connected {x : ℝ // x ∈ A} → IsInterval A := by
+theorem connected_real_subset_implies_interval (A : Set ℝ) :
+Connected {x : ℝ // x ∈ A} → Interval A := by
   intro hconn a b z ha hb haz hzb
   by_contra hznot
 
@@ -129,8 +129,8 @@ Connected {x : ℝ // x ∈ A} → IsInterval A := by
   exact hSep hUnion
 
 
-theorem is_interval_connected_subset_real (A : Set ℝ) :
-IsInterval A → Connected {x : ℝ // x ∈ A} := by
+theorem interval_implies_connected_real_subset (A : Set ℝ) :
+Interval A → Connected {x : ℝ // x ∈ A} := by
   intro hInterval
 
   -- Prove connectedness via the non-separation characterization.
@@ -165,22 +165,19 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
     have hs_inA : s ∈ A := hInterval x.property y.property hs_ge_x hs_le_y
     let sSub : {x : ℝ // x ∈ A} := ⟨s, hs_inA⟩
 
-    have hs_union : sSub ∈ U ∪ V := by
-      simpa [unionUV] using (show sSub ∈ (Set.univ : Set {x : ℝ // x ∈ A}) from trivial)
-    have hs_cases : sSub ∈ U ∨ sSub ∈ V := by simpa using hs_union
-
+    have hs_union : sSub ∈ U ∪ V := by simp [unionUV]
     rcases openU with ⟨U0, hU0_open, hU_eq⟩
     rcases openV with ⟨V0, hV0_open, hV_eq⟩
 
     have hU_case : sSub ∈ U → False := by
       intro hsU
-      have hsU0 : s ∈ U0 := by simpa [hU_eq] using hsU
+      have hsU0 : s ∈ U0 := by rw [hU_eq] at hsU; exact hsU
 
       -- y cannot coincide with s, otherwise y ∈ U ∩ V
       have hs_ne_y : s ≠ y.val := by
         intro hsy
-        have hyU0 : y.val ∈ U0 := by simpa [hsy] using hsU0
-        have hy_inU : (y : {x : ℝ // x ∈ A}) ∈ U := by simpa [hU_eq] using hyU0
+        have hyU0 : y.val ∈ U0 := by rw [hsy] at hsU0; exact hsU0
+        have hy_inU : (y : {x : ℝ // x ∈ A}) ∈ U := by rw [hU_eq];exact hyU0
         exact (Set.disjoint_left.mp disjUV) hy_inU hy
       have hgap : 0 < y.val - s := sub_pos.mpr (lt_of_le_of_ne hs_le_y hs_ne_y)
 
@@ -221,14 +218,13 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
         have hhalf_pos : 0 < δ' / 2 := by nlinarith [hδ'_pos]
         have habs : |t - s| = δ' / 2 := by
           calc
-            |t - s| = |δ' / 2| := by simpa [hts]
+            |t - s| = |δ' / 2| := by simp [hts]
             _ = δ' / 2 := abs_of_nonneg (le_of_lt hhalf_pos)
         have : |t - s| < δ' := by nlinarith [habs, hδ'_pos]
-        simpa [Metric.ball, Real.dist_eq] using this
+        apply this
 
       have ht_inU0 : t ∈ U0 := hBall_subset_U0' ht_in_ball
-      have ht_inU : (⟨t, ht_inA⟩ : {x : ℝ // x ∈ A}) ∈ U := by
-        simpa [hU_eq] using ht_inU0
+      have ht_inU : (⟨t, ht_inA⟩ : {x : ℝ // x ∈ A}) ∈ U := by rw [hU_eq]; exact ht_inU0
 
       have ht_mem_U' : t ∈ U' := by
         refine ⟨le_trans hs_ge_x (le_of_lt ht_gt_s), ht_lt_y, ?_⟩
@@ -239,7 +235,7 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
 
     have hV_case : sSub ∈ V → False := by
       intro hsV
-      have hsV0 : s ∈ V0 := by simpa [hV_eq] using hsV
+      have hsV0 : s ∈ V0 := by simp [hV_eq] at hsV; exact hsV
 
       -- x cannot coincide with s, otherwise x ∈ U ∩ V
       have hs_ne_x : s ≠ x.val := by
@@ -247,7 +243,7 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
         have hx_eq : x = sSub := by
           ext
           simp [sSub, hsx]
-        have hx_inV : x ∈ V := by simpa [hx_eq] using hsV
+        have hx_inV : x ∈ V := by rw [← hx_eq] at hsV; exact hsV
         exact (Set.disjoint_left.mp disjUV) hx hx_inV
       have hgap_left : 0 < s - x.val := sub_pos.mpr (lt_of_le_of_ne hs_ge_x hs_ne_x.symm)
 
@@ -283,12 +279,13 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
           have habs : |t - s| = s - t := by nlinarith [habs']
           have hst_lt : s - t < δ' := by nlinarith [ht_gt]
           have : |t - s| < δ' := by nlinarith [habs, hst_lt]
-          simpa [Metric.ball, Real.dist_eq] using this
+          simp [Metric.ball, Real.dist_eq]
+          exact this
 
         have ht_inV0 : t ∈ V0 := hBall_subset_V0' ht_in_ball
         rcases ht.2.2 with ⟨u, huU, hval⟩
-        have huV0 : u.val ∈ V0 := by simpa [hval] using ht_inV0
-        have huV : u ∈ V := by simpa [hV_eq] using huV0
+        have huV0 : u.val ∈ V0 := by rw [← hval] at ht_inV0; exact ht_inV0
+        have huV : u ∈ V := by rw [hV_eq]; exact huV0
         exact (Set.disjoint_left.mp disjUV) huU huV
 
       have hs_le : s ≤ s - δ' := csSup_le hU'_nonempty hUpper
@@ -296,22 +293,25 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
       have : s < s := lt_of_le_of_lt hs_le hs_lt
       exact lt_irrefl _ this
 
-    cases hs_cases with
-    | inl hsU => exact hU_case hsU
-    | inr hsV => exact hV_case hsV
+    obtain hsU | hsV := hs_union
+    · exact hU_case hsU
+    · exact hV_case hsV
 
   -- Ensure we have an ordered pair; otherwise swap U and V.
   have hne_val : x.val ≠ y.val := by
     intro h
-    have hxy_eq : x = y := by
-      ext
-      exact h
-    have : x ∈ V := by simpa [hxy_eq] using hyV
+    have hxy_eq : x = y := by ext; exact h
+    have : x ∈ V := by rw [← hxy_eq] at hyV; exact hyV
     exact (Set.disjoint_left.mp hUV_disjoint) hxU this
 
-  cases lt_or_gt_of_ne hne_val with
-  | inl hxy =>
-      exact sep_contra U V openU openV hUV_disjoint hUnion x y hxU hyV hxy
-  | inr hyx =>
-      have hUnion' : V ∪ U = Set.univ := by simpa [Set.union_comm] using hUnion
-      exact sep_contra V U openV openU hUV_disjoint.symm hUnion' y x hyV hxU hyx
+  obtain hxy | hyx := lt_or_gt_of_ne hne_val
+  · exact sep_contra U V openU openV hUV_disjoint hUnion x y hxU hyV hxy
+  · have hUnion' : V ∪ U = Set.univ := by rw [Set.union_comm] at hUnion; exact hUnion
+    exact sep_contra V U openV openU hUV_disjoint.symm hUnion' y x hyV hxU hyx
+
+
+theorem connected_real_subset_iff_interval (A : Set ℝ) :
+Connected {x : ℝ // x ∈ A} ↔ Interval A := by
+  constructor
+  · exact connected_real_subset_implies_interval A
+  · exact interval_implies_connected_real_subset A
