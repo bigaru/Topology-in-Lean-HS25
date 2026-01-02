@@ -133,57 +133,58 @@ theorem is_interval_connected_subset_real (A : Set ℝ) :
 IsInterval A → Connected {x : ℝ // x ∈ A} := by
   intro hInterval
 
-  -- Use the non-separation characterization of connectedness
+  -- Prove connectedness via the non-separation characterization.
   refine (Connected_iff_nonSep (X := {x : ℝ // x ∈ A})).2 ?_
   intro U V hdata
   rcases hdata with ⟨openU, hU_nonempty, openV, hV_nonempty, hUV_disjoint⟩
-
-  -- It suffices to rule out a separation `U ∪ V = univ`
   intro hUnion
-  rcases hU_nonempty with ⟨x0, hx0⟩
-  rcases hV_nonempty with ⟨y0, hy0⟩
+  rcases hU_nonempty with ⟨x, hxU⟩
+  rcases hV_nonempty with ⟨y, hyV⟩
 
-  -- If the first chosen points are in the opposite order, swap the roles of `U` and `V`
-  have hswap : ∀
-      (U V : Set {x : ℝ // x ∈ A})
-      (openU : Open U) (openV : Open V)
-      (hU_nonempty : U.Nonempty) (hV_nonempty : V.Nonempty)
-      (hUV_disjoint : Disjoint U V) (hUnion : U ∪ V = Set.univ)
-      (x y : {x : ℝ // x ∈ A}) (hxU : x ∈ U) (hyV : y ∈ V) (hxy : x.val < y.val), False := by
-    intro U V openU openV hU_nonempty hV_nonempty hUV_disjoint hUnion x y hx hy hxy
+  -- Core supremum argument for a fixed ordered pair x < y.
+  have sep_contra :
+      ∀ (U V : Set {x : ℝ // x ∈ A}),
+        Open U → Open V → Disjoint U V → U ∪ V = Set.univ →
+        ∀ (x y : {x : ℝ // x ∈ A}), x ∈ U → y ∈ V → x.val < y.val → False := by
+    intro U V openU openV disjUV unionUV x y hx hy hxy
 
-    -- Real-valued shadow of the left piece: U' = [x,y) ∩ U (projected to ℝ)
+    -- Real-valued shadow of the left piece: U' = [x,y) ∩ image(U)
     let U' : Set ℝ := {t : ℝ | x.val ≤ t ∧ t < y.val ∧ ∃ u ∈ U, u.val = t}
-
-    have hx_mem : x.val ∈ U' := by exact ⟨le_rfl, hxy, ⟨x, hx, rfl⟩⟩
+    have hx_mem : x.val ∈ U' := ⟨le_rfl, hxy, ⟨x, hx, rfl⟩⟩
     have hU'_nonempty : U'.Nonempty := ⟨x.val, hx_mem⟩
-    have hU'_bdd : BddAbove U' := ⟨y.val, by intro t ht; exact le_of_lt ht.2.1⟩
+    have hU'_bdd : BddAbove U' := ⟨y.val, by
+      intro t ht
+      exact le_of_lt ht.2.1⟩
 
-    -- Define s = sup U'
     let s : ℝ := sSup U'
     have hs_ge_x : x.val ≤ s := le_csSup hU'_bdd hx_mem
-    have hs_le_y : s ≤ y.val := csSup_le hU'_nonempty (by intro t ht; exact le_of_lt ht.2.1)
+    have hs_le_y : s ≤ y.val := csSup_le hU'_nonempty (by
+      intro t ht
+      exact le_of_lt ht.2.1)
 
-    -- s lies in A by the interval property
     have hs_inA : s ∈ A := hInterval x.property y.property hs_ge_x hs_le_y
     let sSub : {x : ℝ // x ∈ A} := ⟨s, hs_inA⟩
 
-    -- Every point belongs to U ∪ V
-    have hs_union : sSub ∈ U ∪ V := by simpa [hUnion] using (by trivial : sSub ∈ Set.univ)
+    have hs_union : sSub ∈ U ∪ V := by
+      simpa [unionUV] using (show sSub ∈ (Set.univ : Set {x : ℝ // x ∈ A}) from trivial)
+    have hs_cases : sSub ∈ U ∨ sSub ∈ V := by simpa using hs_union
 
-    -- Unpack the subspace openness data
     rcases openU with ⟨U0, hU0_open, hU_eq⟩
     rcases openV with ⟨V0, hV0_open, hV_eq⟩
 
-    -- Neighborhoods of s in ℝ coming from U or V
-    have hs_cases : (sSub ∈ U) ∨ (sSub ∈ V) := by
-      simpa using hs_union
-
-    -- Case 1: s ∈ U, build a point of U' above s
     have hU_case : sSub ∈ U → False := by
       intro hsU
       have hsU0 : s ∈ U0 := by simpa [hU_eq] using hsU
-      -- Choose a metric ball around s contained in U0
+
+      -- y cannot coincide with s, otherwise y ∈ U ∩ V
+      have hs_ne_y : s ≠ y.val := by
+        intro hsy
+        have hyU0 : y.val ∈ U0 := by simpa [hsy] using hsU0
+        have hy_inU : (y : {x : ℝ // x ∈ A}) ∈ U := by simpa [hU_eq] using hyU0
+        exact (Set.disjoint_left.mp disjUV) hy_inU hy
+      have hgap : 0 < y.val - s := sub_pos.mpr (lt_of_le_of_ne hs_le_y hs_ne_y)
+
+      -- Openness gives a small ball around s contained in U0
       obtain ⟨B, hB_basic, hsB, hB_subset⟩ :=
         (Open_basisTopology (B := metricBasis)).1 hU0_open s hsU0
       rcases hB_basic with ⟨c, ε, rfl⟩
@@ -193,21 +194,10 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
         apply hB_subset
         exact hδ_sub ht
 
-      -- We need room on the right of s (since y ∈ V, s ≠ y)
-      have hs_ne_y : s ≠ y.val := by
-        intro h
-        have hy_inU : (y : {x : ℝ // x ∈ A}) ∈ U := by
-          have hyU0 : y.val ∈ U0 := by simpa [h] using hsU0
-          simpa [hU_eq] using hyU0
-        exact (Set.disjoint_left.mp hUV_disjoint) hy_inU hy
-
-      have hgap : 0 < (y.val - s) := sub_pos.mpr (lt_of_le_of_ne hs_le_y hs_ne_y)
-
-      -- Pick a smaller radius δ' so that s + δ' < y and the ball stays in U0
       let δ' : ℝ := min δ ((y.val - s) / 2)
       have hδ'_pos : 0 < δ' := by
         apply lt_min hδpos
-        nlinarith
+        nlinarith [hgap]
       have hδ'_le : δ' ≤ δ := min_le_left _ _
       have hBall_subset_U0' : Metric.ball s δ' ⊆ U0 := by
         have hsubset : Metric.ball s δ' ⊆ Metric.ball s δ :=
@@ -215,50 +205,52 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
         intro t ht
         exact hBall_subset_U0 (hsubset ht)
 
-      -- Choose a point just to the right of s that stays inside (s + δ') and hence in U
-      set t := s + δ' / 2 with ht_def
-      have ht_gt_s : s < t := by
-        have : (0 : ℝ) < δ' := hδ'_pos
-        nlinarith [ht_def]
+      set t : ℝ := s + δ' / 2 with ht_def
+      have ht_gt_s : s < t := by nlinarith [ht_def, hδ'_pos]
       have ht_lt_y : t < y.val := by
         have hδ'_le' : δ' ≤ (y.val - s) / 2 := min_le_right _ _
-        have ht_le_mid : t ≤ s + (y.val - s) / 2 := by nlinarith [ht_def, hδ'_le']
-        have hmid_lt : s + (y.val - s) / 2 < y.val := by nlinarith
+        have ht_le_mid : t ≤ s + (y.val - s) / 4 := by nlinarith [ht_def, hδ'_le']
+        have hmid_lt : s + (y.val - s) / 4 < y.val := by nlinarith [hgap]
         exact lt_of_le_of_lt ht_le_mid hmid_lt
 
-      -- t belongs to A (interval property) and to U
       have ht_inA : t ∈ A :=
-        hInterval x.property y.property (by nlinarith [hs_ge_x]) (le_of_lt ht_lt_y)
+        hInterval x.property y.property (le_trans hs_ge_x (le_of_lt ht_gt_s)) (le_of_lt ht_lt_y)
+
       have ht_in_ball : t ∈ Metric.ball s δ' := by
-        -- Compute the distance explicitly: |t - s| = δ'/2
-        have hts : t - s = δ' / 2 := by
-          simp [ht_def]
-        have hdist : |t - s| = δ' / 2 := by
-          have hδ'_nonneg : 0 ≤ δ' := le_of_lt hδ'_pos
-          have hδ'half_nonneg : 0 ≤ δ' / 2 := by nlinarith
+        have hts : t - s = δ' / 2 := by simp [ht_def]
+        have hhalf_pos : 0 < δ' / 2 := by nlinarith [hδ'_pos]
+        have habs : |t - s| = δ' / 2 := by
           calc
             |t - s| = |δ' / 2| := by simpa [hts]
-            _ = δ' / 2 := abs_of_nonneg hδ'half_nonneg
-        have : |t - s| < δ' := by nlinarith [hdist, hδ'_pos]
+            _ = δ' / 2 := abs_of_nonneg (le_of_lt hhalf_pos)
+        have : |t - s| < δ' := by nlinarith [habs, hδ'_pos]
         simpa [Metric.ball, Real.dist_eq] using this
+
       have ht_inU0 : t ∈ U0 := hBall_subset_U0' ht_in_ball
       have ht_inU : (⟨t, ht_inA⟩ : {x : ℝ // x ∈ A}) ∈ U := by
         simpa [hU_eq] using ht_inU0
 
-      -- t witnesses that s is not an upper bound of U'
       have ht_mem_U' : t ∈ U' := by
-        refine ⟨?_, ht_lt_y, ?_⟩
-        · nlinarith [hs_ge_x]
-        · refine ⟨⟨t, ht_inA⟩, ht_inU, rfl⟩
+        refine ⟨le_trans hs_ge_x (le_of_lt ht_gt_s), ht_lt_y, ?_⟩
+        exact ⟨⟨t, ht_inA⟩, ht_inU, rfl⟩
 
       have ht_le_s : t ≤ s := le_csSup hU'_bdd ht_mem_U'
-      have hcontr : s < s := lt_of_lt_of_le ht_gt_s ht_le_s
-      exact (lt_irrefl _ ) hcontr
+      exact (not_lt_of_ge ht_le_s) ht_gt_s
 
-    -- Case 2: s ∈ V, show s − δ is a smaller upper bound
     have hV_case : sSub ∈ V → False := by
       intro hsV
       have hsV0 : s ∈ V0 := by simpa [hV_eq] using hsV
+
+      -- x cannot coincide with s, otherwise x ∈ U ∩ V
+      have hs_ne_x : s ≠ x.val := by
+        intro hsx
+        have hx_eq : x = sSub := by
+          ext
+          simp [sSub, hsx]
+        have hx_inV : x ∈ V := by simpa [hx_eq] using hsV
+        exact (Set.disjoint_left.mp disjUV) hx hx_inV
+      have hgap_left : 0 < s - x.val := sub_pos.mpr (lt_of_le_of_ne hs_ge_x hs_ne_x.symm)
+
       obtain ⟨B, hB_basic, hsB, hB_subset⟩ :=
         (Open_basisTopology (B := metricBasis)).1 hV0_open s hsV0
       rcases hB_basic with ⟨c, ε, rfl⟩
@@ -268,19 +260,10 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
         apply hB_subset
         exact hδ_sub ht
 
-      -- Here we need room on the left of s (otherwise x ∈ V contradicts disjointness)
-      have hs_ne_x : s ≠ x.val := by
-        intro h
-        have hx_inV : (x : {x : ℝ // x ∈ A}) ∈ V := by
-          have hxV0 : x.val ∈ V0 := by simpa [h] using hsV0
-          simpa [hV_eq] using hxV0
-        exact (Set.disjoint_left.mp hUV_disjoint) hx hx_inV
-      have hgap_left : 0 < s - x.val := sub_pos.mpr (lt_of_le_of_ne hs_ge_x hs_ne_x.symm)
-
       let δ' : ℝ := min δ ((s - x.val) / 2)
       have hδ'_pos : 0 < δ' := by
         apply lt_min hδpos
-        nlinarith
+        nlinarith [hgap_left]
       have hδ'_le : δ' ≤ δ := min_le_left _ _
       have hBall_subset_V0' : Metric.ball s δ' ⊆ V0 := by
         have hsubset : Metric.ball s δ' ⊆ Metric.ball s δ :=
@@ -288,43 +271,47 @@ IsInterval A → Connected {x : ℝ // x ∈ A} := by
         intro t ht
         exact hBall_subset_V0 (hsubset ht)
 
-      -- Show s - δ' is an upper bound, contradicting minimality of s
       have hUpper : ∀ t ∈ U', t ≤ s - δ' := by
         intro t ht
         have ht_le_s : t ≤ s := le_csSup hU'_bdd ht
         by_contra hnot
-        have ht_gt : t > s - δ' := not_le.mp hnot
+        have ht_gt : s - δ' < t := lt_of_not_ge hnot
+
         have ht_in_ball : t ∈ Metric.ball s δ' := by
-          -- Since t ≤ s and t > s - δ', we have |t - s| = s - t < δ'
           have hts_nonpos : t - s ≤ 0 := sub_nonpos.mpr ht_le_s
-          have hdist : |t - s| = s - t := by
-            have habs := abs_of_nonpos hts_nonpos
-            nlinarith [habs]
-          have hst_lt : s - t < δ' := by nlinarith
-          have : |t - s| < δ' := by nlinarith [hdist, hst_lt]
-          simpa [Metric.ball, Real.dist_eq, abs_sub_comm] using this
+          have habs' : |t - s| = -(t - s) := abs_of_nonpos hts_nonpos
+          have habs : |t - s| = s - t := by nlinarith [habs']
+          have hst_lt : s - t < δ' := by nlinarith [ht_gt]
+          have : |t - s| < δ' := by nlinarith [habs, hst_lt]
+          simpa [Metric.ball, Real.dist_eq] using this
+
         have ht_inV0 : t ∈ V0 := hBall_subset_V0' ht_in_ball
         rcases ht.2.2 with ⟨u, huU, hval⟩
-        have huV : (u : {x : ℝ // x ∈ A}) ∈ V := by simpa [hV_eq, hval] using ht_inV0
-        exact (Set.disjoint_left.mp hUV_disjoint) huU huV
+        have huV0 : u.val ∈ V0 := by simpa [hval] using ht_inV0
+        have huV : u ∈ V := by simpa [hV_eq] using huV0
+        exact (Set.disjoint_left.mp disjUV) huU huV
 
-      have hNewUpper : s ≤ s - δ' := csSup_le hU'_nonempty hUpper
-      have : (0 : ℝ) < δ' := hδ'_pos
-      linarith
+      have hs_le : s ≤ s - δ' := csSup_le hU'_nonempty hUpper
+      have hs_lt : s - δ' < s := by nlinarith [hδ'_pos]
+      have : s < s := lt_of_le_of_lt hs_le hs_lt
+      exact lt_irrefl _ this
 
-    obtain hU | hV  := hs_cases
-    · exact hU_case hU
-    · exact hV_case hV
+    cases hs_cases with
+    | inl hsU => exact hU_case hsU
+    | inr hsV => exact hV_case hsV
 
-  -- Apply the main argument to the correctly ordered pair of witnesses
-  have hlt_or_gt : x0.val < y0.val ∨ y0.val < x0.val := lt_or_gt_of_ne (by
+  -- Ensure we have an ordered pair; otherwise swap U and V.
+  have hne_val : x.val ≠ y.val := by
     intro h
-    apply (Set.disjoint_left.mp hUV_disjoint) hx0
-    simpa [Subtype.ext h] using hy0)
+    have hxy_eq : x = y := by
+      ext
+      exact h
+    have : x ∈ V := by simpa [hxy_eq] using hyV
+    exact (Set.disjoint_left.mp hUV_disjoint) hxU this
 
-  cases hlt_or_gt with
-  | inl hlt =>
-      exact hswap U V openU openV ⟨x0, hx0⟩ ⟨y0, hy0⟩ hUV_disjoint hUnion x0 y0 hx0 hy0 hlt
-  | inr hlt =>
+  cases lt_or_gt_of_ne hne_val with
+  | inl hxy =>
+      exact sep_contra U V openU openV hUV_disjoint hUnion x y hxU hyV hxy
+  | inr hyx =>
       have hUnion' : V ∪ U = Set.univ := by simpa [Set.union_comm] using hUnion
-      exact hswap V U openV openU ⟨y0, hy0⟩ ⟨x0, hx0⟩ hUV_disjoint.symm hUnion' y0 x0 hy0 hx0 hlt
+      exact sep_contra V U openV openU hUV_disjoint.symm hUnion' y x hyV hxU hyx
