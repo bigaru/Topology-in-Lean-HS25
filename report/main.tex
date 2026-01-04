@@ -1,0 +1,210 @@
+\documentclass[11pt, oneside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage[nottoc]{tocbibind}
+\usepackage{blindtext}
+\usepackage{xfrac}
+\usepackage{amssymb} 
+\usepackage{commath}
+\usepackage{tikz-cd}
+\usepackage{faktor}
+\usepackage{float}
+\usepackage{amsthm}
+\graphicspath{{images\ }}
+\usepackage{indentfirst}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{kantlipsum}
+\usepackage{mathtools}
+\usepackage{stix}
+\usepackage{caption}
+\usepackage{biblatex} 
+\usepackage{minted}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linktoc=all,
+    linkcolor=blue,
+    }
+\geometry{a4paper, tmargin=3 cm, bmargin= 4 cm, lmargin= 2.5 cm, rmargin = 2.5 cm}  
+
+
+\newtheorem{innercustomgeneric}{\customgenericname}
+\providecommand{\customgenericname}{}
+\newcommand{\newcustomtheorem}[2]{%
+  \newenvironment{#1}[1]
+  {%
+   \renewcommand\customgenericname{#2}%
+   \renewcommand\theinnercustomgeneric{##1}%
+   \innercustomgeneric
+  }
+  {\endinnercustomgeneric}
+}
+
+\newcustomtheorem{customthm}{Theorem}
+\newcustomtheorem{customlemma}{Lemma}
+\newcustomtheorem{customdef}{Definition}
+\newcustomtheorem{customprop}{Proposition}
+\newcustomtheorem{customrk}{Remark}
+\newcustomtheorem{customcor}{Corollary}
+\newcustomtheorem{customexp}{Example}
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{exmp}[thm]{Example}
+\newtheorem{rk}[thm]{Remark}
+\newtheorem{conj}[thm]{Conjecture}
+\newtheorem{quest}[thm]{Question}
+\newtheorem{fact}[thm]{Fact}
+
+
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+
+\addbibresource{refs.bib}
+
+
+
+\geometry{tmargin=3 cm, bmargin= 4.5 cm, lmargin= 3 cm, rmargin = 3 cm} 
+
+\title{Topology in Lean}
+\author{Arooran Thanabalasingam}
+\date{4th January 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    We formalize two classical results about the real line in Lean 4. First, we prove that the connected subspaces of $\mathbb{R}$ are exactly the intervals, thereby giving a concrete characterization of connectedness in one dimension. Using this theorem, we then derive the Intermediate Value Theorem. Our development is based on a topology library built during the course and it illustrates how theorems can be mechanized in Lean.
+\end{abstract}
+
+
+\section{Introduction}
+
+We formalize two classical results about the real line. The first is the characterization of connected subsets of $\mathbb{R}$:
+\begin{thm}
+\label{thm-1}
+The connected subspaces of $\R$ are intervals. \cite{topoBook}
+\end{thm}
+To make the equivalence clearer, we rephrase the statement as follows: a subset $A \subset \R$ is connected if and only if $A$ is an interval.
+This theorem is central because, in one dimension, it gives a concrete description of an otherwise abstract topological notion. It is also a key bridge between topology and analysis. As an application, we derive the Intermediate Value Theorem:  
+\begin{cor}[Intermediate Value Theorem]
+\label{thm-2}
+If $f: [a,b] \to \mathbb{R}$ is continuous, then for every  $y$ between  $f(a)$ and $f(b)$, there exists $c \in [a,b]$ such that $ f(c) = y$. \cite{wikipediaIVT}
+\end{cor}
+
+
+This result underpins many basic arguments in analysis, including the existence of roots, one-dimensional fixed-point results, and many existence proofs based on continuity.
+During the lectures, we developed a topology library in Lean 4 \cite{course}. Our aim was to use this library to mechanize these statements.
+By formalizing these standard theorems, we obtain reusable components that can serve as a foundation for formalizing further results in topology and analysis.
+
+
+
+\section{Background on Lean}
+We use the programming language Lean 4 \cite{lean} to formalize our chosen theorems. Compared with other proof assistants, Lean 4 is expressive enough to state mathematical results and powerful enough to verify their proofs.
+To work with Lean, it suffices to know three tools. The first is \verb|lean|, the compiler and proof checker. The second is \verb|elan|, a version manager (similar in spirit to Python’s pyenv) that allows you to install and switch between Lean versions. Since we used Lean \verb|v4.23.0-rc2| in the lectures, our project files are pinned to this version. For any other Lean version, the project files might not work. The third tool is \verb|lake|, Lean’s build tool and package manager.
+With \verb|lake build|, you can check all mathematical statements in the project, whereas \verb|lake build ConnectedSpaces.MyAssignment| checks only the specified file.
+
+In Lean, lemmas and theorems are just functions with extra meaning. A mathematical statement is expressed as a function signature, and a proof is written as a function body.
+Lean provides a special way to write the function body, called \textit{tactics}. By starting with the keyword \verb|by|, you enter tactic mode, where you can interactively build the proof step by step and receive immediate feedback from your editor. Each tactic transforms the current proof state by modifying the hypotheses or the goal.
+For example, in a direct proof one often reduces the goal to an already available hypothesis \verb|h|. At that point, the proof can be finished with \verb|exact h|. However, Lean also supports other proof methods such as proof by contradiction, induction and contraposition.
+
+\section{Results}
+The theorem and corollary are contained in \verb|MyAssignment.lean|. The characterizations, supporting lemmas and topology definitions are contained in \verb|RealSpace.lean|.
+
+\subsection{Theorem}
+To formalize Theorem \ref{thm-1}, we first need a way to characterize intervals such as $[a,b]$, $(a,b)$ and $[a,b)$. This is provided by the proposition \verb|Interval| (line 11). It asserts that for every $a,b \in A$ with $a \le z \le b$ for some $z$, then $z \in A$.
+Since the theorem is stated for subsets, it is most convenient to work with open sets using the subspace topology. The theorem itself is formalized as \verb|connected_real_subset_iff_interval| (line 261). For clarity, we split the theorem into two parts, one for each direction of the equivalence. Both follow essentially the same argument as in the textbook \cite{topoBook}.
+
+
+The forward direction is proved in \verb|connected_real_subset_implies_interval| (line 12). For contradiction, we like to assume that the subset $A$ is connected but not an interval. By applying the tactic \verb|by_contra| yields exactly the desired assumption, namely that there exist $a,b \in A$ and some $z \notin A$ with $a \le z \le b$.
+Next, we split $A$ at $z$ and we define
+\[
+U := A \cap (-\infty, z) \quad \text{and} \quad V := A \cap (z, \infty).
+\]
+To show that $U$ and $V$ are open, we use the lemmas \verb|open_Iio| and \verb|open_Ioi|. Since $a \in A$ and $z \notin A$, we have $a \neq z$ and $a < z$, which implies $U$ is nonempty. Similarly, $V$ is nonempty. 
+We prove that $U$ and $V$ are disjoint in \verb|hUV_disjoint|.
+In \verb|hUnion|, we show that every point of $A$ lies in $U$ or $V$ because $z \notin A$.
+Finally, using \verb|Connected_iff_nonSep|, we show that $U$ and $V$ form a separation of $A$, contradicting the assumption that $A$ is connected.
+
+
+The reverse direction is proved in \verb|interval_implies_connected_real_subset| (line 80). For contradiction, assume that the subset $A$ is an interval but not connected. With the help of \verb|Connected_iff_nonSep|, we obtain disjoint open sets $U$ and $V$ that separate $A$.
+The major part of the proof is shown in the auxiliary \verb|have| statement, \verb|sep_contra|, asserting that for any disjoint open sets $U,V$ and any $x \in U$, $y \in V$ with $x < y$, we have a contradiction.
+The argument for \verb|sep_contra| is as follows. Let $U' := [x,y) \cap U.$ In other words, we only consider the points in $U$ that lie between $x$ and $y$.
+Then $U'$ is nonempty and bounded from above, so $s := \sup U'$ exists. Furthermore, since $x < s \le y$ and $A$ is an interval, either $s \in U$ or $s \in V$ and so $(s - \delta, s + \delta) \subset U$ or $(s - \delta, s + \delta) \subset V$ for some $\delta > 0$.
+If $s \in U$, then $s$ cannot be an upper bound of $U'$. If $s \in V$, then $s-\delta$ is an upper bound for $U'$ that is strictly smaller than $s$. Both cases lead to a contradiction.
+
+
+\subsection{Corollary}
+To state Corollary \ref{thm-2} in the classical form, we need a way to express continuity on a restricted domain. This notion is expressed by \verb|ContinuousOn|. The corollary is proved in \verb|intermediate| \verb|_value_theorem| (line \verb|269|).
+
+The proof proceeds as follows.
+First, we show that $[a,b]$ is an interval in \verb|hInterval_domain|.
+Using \verb|connected_real_subset_iff_interval|, we translate this interval statement into a connectedness result in \verb|hConn_domain|.
+To use the subspace topology, we rewrite $f$ as a function whose domain is a subset.
+We define
+\[
+\text{fRes} : \{x \quad // \quad x \in \mathrm{Icc}\ a\ b\} \to \mathbb{R}.
+\]
+We accordingly prove that \verb|fRes| is continuous.
+To apply \verb|Connected_image|, we need a surjective map.
+For this purpose, we define
+\[
+\text{g} : \{x // x \in \mathrm{Icc}\ a\ b\} \to \{t : \mathbb{R} // t \in f'' \mathrm{Set.Icc}\ a\ b\}.
+\]
+We show that $g$ is surjective in \verb |hSurj_g| and continuous in \verb|hCont_g|.
+In \verb|hConn_img|, we prove that the image of $f$ is connected using \verb|Connected_image|.
+Applying \verb|connected_real_subset_iff| \verb|_interval| again, we conclude that $f '' \mathrm{Icc}\ a\ b$ is an interval in \verb|hInterval_img|.
+Finally, since $y$ lies between $f(a)$ and $f(b)$, the interval property gives $y \in f '' \mathrm{Icc}\ a\ b$.
+Unpacking this membership yields $c \in \mathrm{Icc}\ a\ b$ such that $f(c) = y$.
+
+
+\section{Discussion}
+
+\subsection{Theorem signature}
+We often struggled to choose the correct theorem signatures. The first such issue arose with intervals. In mathematics, what an interval is clear, but in Lean this must be expressed explicitly as a proposition.
+Later, when we had difficulty proving that $A \cap (-\infty, z)$ is open, we realized that the problem lay in our signature. We therefore replaced $(A: \text{Set}\ \R)$ by $\{x : \R // x \in A\}$. With this change, the relevant subspace topology is inferred implicitly.
+
+Lean is highly expressive, but this expressiveness can be intimidating for beginners. One common difficulty is deciding when to use explicit parameters and when to rely on implicit ones. To avoid unnecessary complexity, we adopted the same conventions as the library.
+
+When defining the corollary’s signature, we often ended up with a tautological statement. This likely happened because we tried to stay as close as possible to the classical form while simultaneously using $\{x : \R // x \in A\}$. Once we noticed the issue, we focused solely on the classical form.
+
+\subsection{Corollary}
+
+There are two common versions of the Intermediate Value Theorem. The first is the classical statement familiar from an analysis course. The second is a more topological formulation: if $I \subset \R$ is connected, then $f(I) \subset \R$ is also connected. The classical version can be recovered from this by specializing to intervals.
+In practice, however, formalizing the topological version and then deriving the classical statement will roughly take the same number of lines as formalizing the classical statement directly. Therefore, we chose the direct approach, since it is the one we are most familiar with.
+
+\subsection{Organization}
+To make the distinction clear, our files are placed in the project root, while the lecture files are located in the \verb|Definition/| directory. In a proper setup, our contributions would also belong in \verb|Definition/|, so that others could reuse our theorems.
+For simplicity, we placed the proposition \verb|ContinuousOn| in \verb|RealSpace.lean| rather than in its more appropriate location \\
+\verb|TopologicalSpaces.lean|.
+
+\subsection{Insights}
+In traditional mathematics, you typically receive feedback only after someone has read your proof attempt. Even then, there can be a lingering worry that the reader may have misunderstood your argument or may not be fully familiar with the topic.
+With Lean, by contrast, feedback is immediate and continuous. And there is no arguing with the computer: if Lean rejects a proof, then something is missing or incorrect in the formal argument.
+Because Lean forces you to be explicit and to handle all cases, it helps you produce complete proofs and can even discover cases you had not considered.
+On the other hand, this level of explicitness can be daunting. Compared with textbook proofs, our Lean formalizations required significantly more lines of code.
+
+\printbibliography
+
+\section*{AI usage declaration}
+GitHub Copilot (GPT-5.2) was used during the formalization of the theorems and ChatGPT (GPT-5.2) was used for text editing. Perplexity AI was used for quick searches, primarily concerning LaTeX syntax and conventions.
+
+
+
+\end{document}
